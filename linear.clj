@@ -18,43 +18,45 @@
 				(or (full-vector-check items)
 								(double-check items)))
 
-(defn tensors [f] (fn [& items]
-				{:pre [(full-tensor-check items)]}				
+(defn tensors [f & items]
+				{:pre [(full-tensor-check items)]
+					:post[]}
 				(if (double? (first items))
 								(apply f items)
-								(apply (partial mapv (tensors f)) items))))
+								(apply (partial mapv (partial tensors f)) items)))
 
-(def t+ (tensors +))
-(def t- (tensors -))
-(def t* (tensors *))
-(def td (tensors /))
+(def t+ (partial tensors +))
+(def t- (partial tensors -))
+(def t* (partial tensors *))
+(def td (partial tensors /))
 
 (def v+ t+)
 (def v- t-)
 (def v* t*)
 (def vd td)
 
+(def c+ t+)
+(def c- t-)
+(def c* t*)
+(def cd td)
+
 (defn foldLeft [zero f items]
 				(if (empty? items)
 								zero
 								(recur (f zero (first items)) f (rest items))))
 
-(defn vect-scal [f] (fn [a b]
-    (mapv (partial f b) a)))
 
-(def v*s_bin (vect-scal *))
 
-;(defn v*s_bin [a b] (mapv (partial * b) a))
+(defn v*s_bin [a b] (mapv (partial * b) a))
 (defn scalar_bin [a b] (apply + (mapv * a b)))
 
 (defn v*s [one & items] (foldLeft one v*s_bin items))
 
 (defn scalar [& items] (apply + (apply v* items)))
 
-(defn vect_bin [[a b c] [d f e]]
-	[(- (* b e) (* c f))  
-	 (- (* c d) (* a e))
-	 (- (* a f) (* b d))])
+(defn vect_bin [a b] [(- (* (nth a 1) (nth b 2)) (* (nth a 2) (nth b 1))) 
+																					 (- (* (nth a 2) (nth b 0)) (* (nth a 0) (nth b 2)))
+																						(- (* (nth a 0) (nth b 1)) (* (nth a 1) (nth b 0)))])
 
 (defn vect [& items]	{:pre [(full-double-vector-check items)]} 
 				(foldLeft (first items) vect_bin (rest items)))
@@ -65,7 +67,6 @@
 (def md td)
 (defn m*s_bin [a b] {:pre [(double? b)]}
 				(mapv v*s a (iterate identity b)))
-
 (defn m*s [one & items] (foldLeft one m*s_bin items))
 (defn m*v [a b]
 				(mapv (partial scalar b) a))
