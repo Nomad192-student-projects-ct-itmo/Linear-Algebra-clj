@@ -1,4 +1,4 @@
-# Linear Algebra
+# Linear Algebra in Clojure
 
 ## Линейная алгебра на Clojure
 
